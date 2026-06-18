@@ -60,13 +60,13 @@ scaler = StandardScaler()
 # train 데이터 스케일링
 X_train_scaled = pd.DataFrame(scaler.fit_transform(X_train), columns=feature_col)
 
+X_train_scaled.to_csv('./data/training_data.csv')
 print(X_train_scaled.head())
 print("train 데이터 스케일링 완료")
 
 # test 데이터 스케일링
-X_test_scaled = scaler.transform(X_test)
-y_test_scaled = scaler.transform(y_test)
+X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=feature_col)
 
+X_test_scaled.to_csv('./data/testing_data.csv')
 print(X_test_scaled.head())
-print(y_test_scaled.head())
 print("test 데이터 스케일링 완료")

@@ -1,0 +1,30 @@
+artifact_path: file:C:/Users/SCESecure/Documents/ML_CardioCare_Project/Predict_Heart_Diseases/mlruns/2/models/m-b985fb54f04140ea970d493774ff1888/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.14
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.9.0
+    skops_trusted_types: null
+is_signature_from_type_hint: false
+mlflow_version: 3.14.0
+model_id: m-b985fb54f04140ea970d493774ff1888
+model_size_bytes: 949
+model_uuid: m-b985fb54f04140ea970d493774ff1888
+prompts: null
+run_id: 6e410b0489e948f3b64164cda9b137e1
+signature:
+  inputs: '[{"type": "double", "name": "thalach", "required": true}, {"type": "double",
+    "name": "oldpeak", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-06-19 13:27:21.723395'

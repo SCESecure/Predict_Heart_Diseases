@@ -1,0 +1,25 @@
+artifact_path: file:C:/Users/SCESecure/Documents/ML_CardioCare_Project/Predict_Heart_Diseases/mlruns/3/models/m-fab93ee7930543849bcec7b272664331/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.skops
+    predict_fn: predict
+    python_version: 3.13.14
+  sklearn:
+    code: null
+    pickled_model: model.skops
+    serialization_format: skops
+    sklearn_version: 1.9.0
+    skops_trusted_types:
+    - sklearn.calibration._CalibratedClassifier
+    - sklearn.calibration._SigmoidCalibration
+mlflow_version: 3.14.0
+model_id: m-fab93ee7930543849bcec7b272664331
+model_size_bytes: 70928
+model_uuid: m-fab93ee7930543849bcec7b272664331
+prompts: null
+run_id: fc5aa0b960924273a2949a6a8078d455
+utc_time_created: '2026-06-19 13:27:36.638137'

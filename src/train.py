@@ -24,7 +24,7 @@ import mlflow.sklearn
 #     KNN_acc, KNN_roc_auc_ovo, KNN_roc_auc_ovr, \
 #     XGB_acc, XGB_roc_auc_ovo, XGB_roc_auc_ovr
 
-from inference import LR_predict, SVM_predict
+from inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
 
 print("\n\n")
 print("[Train 단계 (train.py)]")
@@ -123,48 +123,73 @@ with mlflow.start_run() :
     print("SVM(Support Vector Machine) 모델 실험 완료\n")
 
 
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [Random Forest]")
+mlflow.autolog()
 
-    # # Random Forest 학습 (앙상블 방법에서 사용된 모델 가져옴)
-    # RF_model = forest
-    # RF_model.fit(X_train_selected, y_train)
+with mlflow.start_run() :
+    # Random Forest 학습 (앙상블 방법에서 사용된 모델 가져옴)
+    RF_model = forest
+    RF_model.fit(X_train_selected, y_train)
 
-    # mlflow.log_params({"n_estimators" : 100, "max_depth" : 5, "random_state" : 1})
+    print("Random Forest 모델 학습 완료")
+    print("\n")
 
-    # mlflow.sklearn.log_model(RF_model, "model")
+    mlflow.log_params({"n_estimators" : 100, "max_depth" : 5, "random_state" : 1})
 
-    # mlflow.log_metric("Accuracy Score", RF_acc)
-    # mlflow.log_metric("ROC AUC(OVO)", RF_roc_auc_ovo)
-    # mlflow.log_metric("ROC AUC(OVR)", RF_roc_auc_ovr)
+    mlflow.sklearn.log_model(RF_model, "model")
 
-    # print("Random Forest 모델 학습 완료")
-    # print("\n")
+    mlflow.log_metric("Accuracy_Score", RF_predict(RF_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", RF_predict(RF_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", RF_predict(RF_model, X_test_selected, y_test)[2])
 
-    # # KNN(K-Nearest Neighbors) 학습
-    # KNN_model = KNeighborsClassifier(n_neighbors=10)
-    # KNN_model.fit(X_train_selected, y_train)
+    print("Random Forest 모델 실험 완료\n")
 
-    # mlflow.log_param("n_neighbors", 10)
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [KNN]")
+mlflow.autolog()
 
-    # mlflow.sklearn.log_model(KNN_model, "model")
+with mlflow.start_run() :
+    # KNN(K-Nearest Neighbors) 학습
+    KNN_model = KNeighborsClassifier(n_neighbors=10)
+    KNN_model.fit(X_train_selected, y_train)
 
-    # mlflow.log_metric("Accuracy Score", KNN_acc)
-    # mlflow.log_metric("ROC AUC(OVO)", KNN_roc_auc_ovo)
-    # mlflow.log_metric("ROC AUC(OVR)", KNN_roc_auc_ovr)
+    print("KNN(K-Nearest Neighbors) 모델 학습 완료")
+    print("\n")
 
-    # print("KNN(K-Nearest Neighbors) 모델 학습 완료")
-    # print("\n")
+    mlflow.log_param("n_neighbors", 10)
 
-    # # XGBoost(eXtra Gradient Boost) 학습 (설정은 Random Forest와 똑같이 하였음)
-    # XGB_model = XGBClassifier(n_estimators=100, max_depth=5, random_state=1)
-    # XGB_model.fit(X_train_selected, y_train)
+    mlflow.sklearn.log_model(KNN_model, "model", skops_trusted_types=[
+        'sklearn.metrics._dist_metrics.EuclideanDistance64', 
+        'sklearn.neighbors._kd_tree.KDTree'
+    ])
 
-    # mlflow.log_params({"n_estimators" : 100, "max_depth" : 5, "random_state" : 1})
+    mlflow.log_metric("Accuracy_Score", KNN_predict(KNN_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", KNN_predict(KNN_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", KNN_predict(KNN_model, X_test_selected, y_test)[2])
+
+    print("KNN(K-Nearest Neighbors) 모델 실험 완료\n")
+
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [XGBoost]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+    # XGBoost(eXtra Gradient Boost) 학습 (설정은 Random Forest와 똑같이 하였음)
+    XGB_model = XGBClassifier(n_estimators=100, max_depth=5, random_state=1)
+    XGB_model.fit(X_train_selected, y_train)
+
+    print("XGBoost (eXtra Gradient Boost) 분류기 모델 학습 완료")
+    print("\n")
+
+    mlflow.log_params({"n_estimators" : 100, "max_depth" : 5, "random_state" : 1})
     
-    # mlflow.sklearn.log_model(XGB_model, "model")
+    mlflow.sklearn.log_model(XGB_model, "model", skops_trusted_types=[
+        'xgboost.core.Booster', 
+        'xgboost.sklearn.XGBClassifier'
+    ])
 
-    # mlflow.log_metric("Accuracy Score", XGB_acc)
-    # mlflow.log_metric("ROC AUC(OVO)", XGB_roc_auc_ovo)
-    # mlflow.log_metric("ROC AUC(OVR)", XGB_roc_auc_ovr)
+    mlflow.log_metric("Accuracy_Score", XGB_predict(XGB_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", XGB_predict(XGB_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", XGB_predict(XGB_model, X_test_selected, y_test)[2])
 
-    # print("XGBoost (eXtra Gradient Boost) 분류기 모델 학습 완료")
-    # print("\n")
+    print("XGBoost (eXtra Gradient Boost) 분류기 모델 실험 완료\n")
+

@@ -61,11 +61,9 @@ print("\n")
 LR_model = LogisticRegression(max_iter=300)
 LR_model.fit(X_train_selected, y_train)
 
-
-print("\n")
 print("Logistic Regression 모델 학습 완료")
-print("\n")
 
+print("\n")
 
 # SVM(Support Vector Machine) 학습
 SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
@@ -85,15 +83,14 @@ for i in range(0, len(SVM_kernel)) :
     # 학습된 모델을 리스트화 해서 그대로 inference로 넘김
     SVM_fitted_list.insert(i, SVM_model)
 
-print("\n")
 print("SVM(Support Vector Machine) 모델 학습 완료")
+
 print("\n")
 
 # Random Forest 학습 (앙상블 방법에서 사용된 모델 가져옴)
 RF_model = forest
 RF_model.fit(X_train_selected, y_train)
 
-print("\n")
 print("Random Forest 모델 학습 완료")
 print("\n")
 
@@ -101,7 +98,6 @@ print("\n")
 KNN_model = KNeighborsClassifier(n_neighbors=10)
 KNN_model.fit(X_train_selected, y_train)
 
-print("\n")
 print("KNN(K-Nearest Neighbors) 모델 학습 완료")
 print("\n")
 
@@ -109,7 +105,5 @@ print("\n")
 XGB_model = XGBClassifier(n_estimators=100, max_depth=5, random_state=1)
 XGB_model.fit(X_train_selected, y_train)
 
-
-print("\n")
 print("XGBoost (eXtra Gradient Boost) 분류기 모델 학습 완료")
 print("\n")

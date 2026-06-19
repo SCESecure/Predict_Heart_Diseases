@@ -61,19 +61,22 @@ LR_pred = LR_model.predict(X_test_selected)
 LR_pred_prob = LR_model.predict_proba(X_test_selected)
 
 LR_acc = accuracy_score(y_test, LR_pred)
-LR_roc_auc = roc_auc_score(y_test, LR_pred_prob, multi_class='ovo')
+LR_roc_auc_ovo = roc_auc_score(y_test, LR_pred_prob, multi_class='ovo')
+LR_roc_auc_ovr = roc_auc_score(y_test, LR_pred_prob, multi_class='ovr')
 
 print("\n")
 print("Logistic Regression 모델 학습 완료")
 print("Acc : " + str(LR_acc) + " ({:.2f}%)".format(LR_acc * 100))
-print("ROC AUC 점수(OVO(one-vs-one)) : " + str(LR_roc_auc) + " ({:.2f}%)".format(LR_roc_auc * 100))
+print("ROC AUC 점수(OVO(one-vs-one)) : " + str(LR_roc_auc_ovo) + " ({:.2f}%)".format(LR_roc_auc_ovo * 100))
+print("ROC AUC 점수(OVR(one-vs-rest)) : " + str(LR_roc_auc_ovr) + " ({:.2f}%)".format(LR_roc_auc_ovr * 100))
 
 print("\n")
 
 # SVM(Support Vector Machine) 학습
 SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
 SVM_acc_list = []
-SVM_roc_acc_list = []
+SVM_roc_acc_ovo_list = []
+SVM_roc_acc_ovr_list = []
 
 for i in range(0, len(SVM_kernel)) :
     # SVC의 probality 속성이 scikit-learn 1.11 버전부터 deprecated 됨에 따라
@@ -88,18 +91,22 @@ for i in range(0, len(SVM_kernel)) :
 
     SVM_pred = SVM_model.predict(X_test_selected)
     SVM_pred_prob = SVM_model.predict_proba(X_test_selected)
+
     SVM_acc = accuracy_score(y_test, SVM_pred)
-    SVM_roc_acc = roc_auc_score(y_test, SVM_pred_prob, multi_class='ovo')
+    SVM_roc_acc_ovo = roc_auc_score(y_test, SVM_pred_prob, multi_class='ovo')
+    SVM_roc_acc_ovr = roc_auc_score(y_test, SVM_pred_prob, multi_class='ovr')
 
     SVM_acc_list.insert(i, SVM_acc)
-    SVM_roc_acc_list.insert(i, SVM_roc_acc)
+    SVM_roc_acc_ovo_list.insert(i, SVM_roc_acc_ovo)
+    SVM_roc_acc_ovr_list.insert(i, SVM_roc_acc_ovr)
 
 print("SVM(Support Vector Machine) 모델 학습 완료")
 
 for i in range(0, len(SVM_kernel)) :
     print("[" + SVM_kernel[i] + " 모델] ")
     print("Acc : " + str(SVM_acc_list[i]) + " ({:.2f}%)".format(SVM_acc_list[i] * 100))
-    print("ROC AUC 점수(OVO(one-vs-one)) : " + str(SVM_roc_acc_list[i]) + " ({:.2f}%)".format(SVM_roc_acc_list[i] * 100))
+    print("ROC AUC 점수(OVO(one-vs-one)) : " + str(SVM_roc_acc_ovo_list[i]) + " ({:.2f}%)".format(SVM_roc_acc_ovo_list[i] * 100))
+    print("ROC AUC 점수(OVR(one-vs-rest)) : " + str(SVM_roc_acc_ovr_list[i]) + " ({:.2f}%)".format(SVM_roc_acc_ovr_list[i] * 100))
     print("")
 
 print("")
@@ -112,9 +119,11 @@ RF_pred = RF_model.predict(X_test_selected)
 RF_pred_prob = RF_model.predict_proba(X_test_selected)
 
 RF_acc = accuracy_score(y_test, RF_pred)
-RF_roc_auc = roc_auc_score(y_test, RF_pred_prob, multi_class='ovo')
+RF_roc_auc_ovo = roc_auc_score(y_test, RF_pred_prob, multi_class='ovo')
+RF_roc_auc_ovr = roc_auc_score(y_test, RF_pred_prob, multi_class='ovr')
 
 print("Random Forest 모델 학습 완료")
 print("Acc : " + str(RF_acc) + " ({:.2f}%)".format(RF_acc * 100))
-print("ROC AUC 점수(OVO(one-vs-one)) : " + str(RF_roc_auc) + " ({:.2f}%)".format(RF_roc_auc * 100))
+print("ROC AUC 점수(OVO(one-vs-one)) : " + str(RF_roc_auc_ovo) + " ({:.2f}%)".format(RF_roc_auc_ovo * 100))
+print("ROC AUC 점수(OVR(one-vs-rest)) : " + str(RF_roc_auc_ovr) + " ({:.2f}%)".format(RF_roc_auc_ovr * 100))
 

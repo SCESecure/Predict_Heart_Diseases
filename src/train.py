@@ -70,6 +70,7 @@ print("ROC AUC 점수(OVO(one-vs-one)) : " + str(LR_roc_auc) + " ({:.2f}%)".form
 
 print("\n")
 
+# SVM(Support Vector Machine) 학습
 SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
 SVM_acc_list = []
 SVM_roc_acc_list = []
@@ -101,5 +102,19 @@ for i in range(0, len(SVM_kernel)) :
     print("ROC AUC 점수(OVO(one-vs-one)) : " + str(SVM_roc_acc_list[i]) + " ({:.2f}%)".format(SVM_roc_acc_list[i] * 100))
     print("")
 
-print("\n")
+print("")
+
+# Random Forest 학습 (앙상블 방법에서 사용된 모델 가져옴)
+RF_model = forest
+RF_model.fit(X_train_selected, y_train)
+
+RF_pred = RF_model.predict(X_test_selected)
+RF_pred_prob = RF_model.predict_proba(X_test_selected)
+
+RF_acc = accuracy_score(y_test, RF_pred)
+RF_roc_auc = roc_auc_score(y_test, RF_pred_prob, multi_class='ovo')
+
+print("Random Forest 모델 학습 완료")
+print("Acc : " + str(RF_acc) + " ({:.2f}%)".format(RF_acc * 100))
+print("ROC AUC 점수(OVO(one-vs-one)) : " + str(RF_roc_auc) + " ({:.2f}%)".format(RF_roc_auc * 100))
 

@@ -1,10 +1,10 @@
 # 파일 불러오기
 try :
-    from preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
+    from preprocessing import X_train, X_train_scaled, y_train, X_test_scaled, y_test
     from inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
 
 except ImportError :
-    from src.preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
+    from src.preprocessing import X_train, X_train_scaled, y_train, X_test_scaled, y_test
     from src.inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
 
 # 앙상블로 특성 선택에 필요한 라이브러리
@@ -392,7 +392,7 @@ print("\n")
 final_RF = RandomForestClassifier(max_depth = int(rf_cv_best_params['max_depth']), 
                                   max_features = rf_cv_best_params['max_features'], 
                                   n_estimators = int(rf_cv_best_params['max_depth'])
-                                  ).fit(X_train_selected, y_train)
+                                  ).fit(X_train, y_train)
 final_KNN = KNeighborsClassifier(leaf_size = int(knn_cv_best_params['leaf_size']), 
                                  n_neighbors = int(knn_cv_best_params['n_neighbors']), 
-                                 p = knn_cv_best_params['p']).fit(X_train_selected, y_train)
+                                 p = knn_cv_best_params['p']).fit(X_train, y_train)

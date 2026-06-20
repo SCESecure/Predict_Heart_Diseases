@@ -4,13 +4,21 @@ from preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
 # 앙상블로 특성 선택에 필요한 라이브러리
 from sklearn.feature_selection import SelectFromModel
 
+from xgboost import XGBClassifier
+# cuda 사용할 경우 아래 코드 사용
+# model = XGBClassifier(
+#     device='cuda',        # GPU 사용
+#     tree_method='hist',   # 2.0+ 에서는 hist + device 조합
+#     n_estimators=300,
+# )
+
 # 모델들
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.svm import SVC
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from xgboost import XGBClassifier
+
 
 # mlflow
 import mlflow
@@ -204,8 +212,9 @@ print("교차 검증 및 하이퍼파라미터 튜닝합니다.")
 print("\n")
 
 def grid_searching(grid_target_model, param_grid, kf) :
-    
-    cv = GridSearchCV(grid_target_model, param_grid=param_grid, cv=kf)
+
+    # CPU를 기준으로 돌아갑니다.
+    cv = GridSearchCV(grid_target_model, param_grid=param_grid, cv=kf, n_jobs=-1, verbose=2)
 
     cv.fit(X_train_selected, y_train)
 
@@ -284,23 +293,23 @@ print("대상 : RF 모델")
 print("\n")
 
 mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [RF-5Fold]")
-mlflow.autolog()
+mlflow.autolog(log_models=False) # 이렇게 안하면 메모리가 죽음
 
 with mlflow.start_run() :
 
-    param_grid = {"n_estimators" : np.arange(100, 1000, 10),
-                  "criterion" : ["gini", "entropy", "log_loss"],
-                  "max_depth" : np.arange(5, 100, 5),
+    # 9 * 10 * 3 = 270
+    param_grid = {"n_estimators" : np.arange(100, 500, 50),
+                  "max_depth" : np.arange(5, 50, 5),
                   "max_features" : ["sqrt", "log2", None],
-                  "warm_start" : [True, False]
                   }
     cv = grid_searching(grid_target_model_list["RF"], param_grid, kf)
-
-    cv.fit(X_train_selected, y_train)
 
     mlflow.log_params(cv['best_params'])
 
     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+    rf_cv_best_params = cv['best_params']
+    rf_cv_best_score = cv["best_score"]
 
     print("Random Forest 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
     print("점수는 다음과 같습니다.\n", cv["best_score"])
@@ -311,20 +320,16 @@ print("대상 : KNN 모델")
 print("\n")
 
 mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [KNN-5Fold]")
-mlflow.autolog()
+mlflow.autolog(log_models=False)
 
 with mlflow.start_run() :
 
-    param_grid = {"n_neighbors" : np.arange(5, 100, 5),
-                  "weights" : ['uniform', 'distance'],
-                  "algorithm" : ['auto', 'ball_tree', 'kd_tree', 'brute'],
+    # 10 * 27 * 2 = 540
+    param_grid = {"n_neighbors" : np.arange(5, 50, 5),
                   "leaf_size" : np.arange(30, 300, 10),
                   "p" : [1, 2],
-                  "metric" : ['minkowski'],
                   }
     cv = grid_searching(grid_target_model_list["KNN"], param_grid, kf)
-
-    cv.fit(X_train_selected, y_train)
 
     mlflow.log_params(cv['best_params'])
 
@@ -332,6 +337,9 @@ with mlflow.start_run() :
         'sklearn.metrics._dist_metrics.EuclideanDistance64', 
         'sklearn.neighbors._kd_tree.KDTree'
     ])
+
+    knn_cv_best_params = cv['best_params']
+    knn_cv_best_score = cv["best_score"]
 
     mlflow.log_metric("CV_best_score", cv["best_score"])
 
@@ -372,4 +380,7 @@ with mlflow.start_run() :
 
 print("\n")
 print("하이퍼파라미터 튜닝 완료")
+print("최종 결과 입니다. (소괄호 안 값은 점수입니다.))\n")
+print("Random Forest 모델 : ", rf_cv_best_params, " (", rf_cv_best_score,")\n")
+print("KNN 모델 : ", knn_cv_best_params, " (", knn_cv_best_score,")\n")
 print("\n")

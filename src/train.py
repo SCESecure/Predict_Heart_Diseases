@@ -5,7 +5,7 @@ from preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
 from sklearn.feature_selection import SelectFromModel
 
 # 모델들
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.svm import SVC
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier
@@ -13,7 +13,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from xgboost import XGBClassifier
 
 # mlflow
-from mlflow.tracking import MlflowClient
 import mlflow
 import mlflow.sklearn
 
@@ -25,6 +24,12 @@ import mlflow.sklearn
 #     XGB_acc, XGB_roc_auc_ovo, XGB_roc_auc_ovr
 
 from inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
+
+# 교차 검증
+from sklearn.model_selection import KFold, GridSearchCV
+
+# 그 이외의 라이브러리
+import numpy as np
 
 print("\n\n")
 print("[Train 단계 (train.py)]")
@@ -193,3 +198,25 @@ with mlflow.start_run() :
 
     print("XGBoost (eXtra Gradient Boost) 분류기 모델 실험 완료\n")
 
+
+print("\n")
+print("교차 검증 및 하이퍼파라미터 튜닝합니다.")
+print("\n")
+
+# 교차 검증 (모델은 KNN)
+kf = KFold(n_splits=5, shuffle=True, random_state=1)
+
+grid_target_model = KNeighborsClassifier()
+param_grid = {"n_neighbors" : np.arange(5, 100, 5),
+              "weights" : ['uniform', 'distance'],
+              "algorithm" : ['auto', 'ball_tree', 'kd_tree', 'brute'],
+              "leaf_size" : np.arange(30, 300, 10),
+              "p" : [1, 2],
+              "metric" : ['minkowski'],
+              }
+knn_cv = GridSearchCV(grid_target_model, param_grid=param_grid, cv=kf)
+
+knn_cv.fit(X_train_selected, y_train)
+
+print("KNN 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", knn_cv.best_params_)
+print("점수는 다음과 같습니다.\n", knn_cv.best_score_)

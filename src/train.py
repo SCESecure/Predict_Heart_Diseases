@@ -102,8 +102,8 @@ mlflow.autolog()
 
 with mlflow.start_run() :
     # SVM(Support Vector Machine) 학습
-    SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
-    SVM_fitted_list = []
+    # SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
+    # SVM_fitted_list = []
 
     SVM_model = CalibratedClassifierCV(SVC(kernel='rbf', C=5, random_state=1), ensemble=False)
     SVM_model.fit(X_train_selected, y_train)
@@ -203,20 +203,173 @@ print("\n")
 print("교차 검증 및 하이퍼파라미터 튜닝합니다.")
 print("\n")
 
-# 교차 검증 (모델은 KNN)
+def grid_searching(grid_target_model, param_grid, kf) :
+    
+    cv = GridSearchCV(grid_target_model, param_grid=param_grid, cv=kf)
+
+    cv.fit(X_train_selected, y_train)
+
+    result = {"best_params" : cv.best_params_,
+              "best_score" : cv.best_score_}
+
+    return result
+
+# 교차 검증
 kf = KFold(n_splits=5, shuffle=True, random_state=1)
+grid_target_model_list = {"LR" : LogisticRegression(),
+                          "SVM" : SVC(),
+                          "RF" : RandomForestClassifier(),
+                          "KNN" : KNeighborsClassifier(),
+                          "XGB" : XGBClassifier()}
 
-grid_target_model = KNeighborsClassifier()
-param_grid = {"n_neighbors" : np.arange(5, 100, 5),
-              "weights" : ['uniform', 'distance'],
-              "algorithm" : ['auto', 'ball_tree', 'kd_tree', 'brute'],
-              "leaf_size" : np.arange(30, 300, 10),
-              "p" : [1, 2],
-              "metric" : ['minkowski'],
-              }
-knn_cv = GridSearchCV(grid_target_model, param_grid=param_grid, cv=kf)
+# print('\n')
+# print("대상 : Logistic Regression 모델")
+# print('\n')
 
-knn_cv.fit(X_train_selected, y_train)
+# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [LR-5Fold]")
+# mlflow.autolog()
 
-print("KNN 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", knn_cv.best_params_)
-print("점수는 다음과 같습니다.\n", knn_cv.best_score_)
+# with mlflow.start_run() :
+
+#     param_grid = {"penalty" : ['l1', 'l2', 'elasticnet', None],
+#               "C" : np.arange(1, 60, 3),
+#               "l1_ratio" : np.arange(0.0001, 1, 10),
+#               "dual" : [True, False],
+#               "fit_intercept" : [True, False],
+#               "solver" : ['lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga'],
+#               "max_iter" : np.arange(100, 1000, 10)
+#               }
+
+#     cv = grid_searching(grid_target_model_list["LR"], param_grid, kf)
+
+#     mlflow.log_params(cv['best_params'])
+
+#     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+#     print("Logistic Regression 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+# print('\n')
+# print("대상 : SVM 모델")
+# print('\n')
+# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [SVM-5Fold]")
+# mlflow.autolog()
+
+# with mlflow.start_run() :
+
+#     param_grid = {"C" : np.arange(1, 60, 3),
+#                   "kernel" : ['linear', 'poly', 'rbf', 'sigmoid'],
+#                   "degree" : np.arange(1, 20, 2), # 어차피 poly가 아닌 다른 parameter들은 무시됨
+#                   "gamma" : ['scale', 'auto'],
+#                   "verbose" : [True, False],
+#                   "max_iter" : np.arange(1, 100, 2),
+#               }
+
+#     cv = grid_searching(grid_target_model_list["SVM"], param_grid, kf)
+
+#     mlflow.log_params(cv['best_params'])
+
+#     mlflow.sklearn.log_model(grid_target_model_list["SVM"], "model", skops_trusted_types=[
+#         "sklearn.calibration._CalibratedClassifier",
+#         "sklearn.calibration._SigmoidCalibration",
+#     ])
+
+#     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+#     print("SVM 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+print("\n")
+print("대상 : RF 모델")
+print("\n")
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [RF-5Fold]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+
+    param_grid = {"n_estimators" : np.arange(100, 1000, 10),
+                  "criterion" : ["gini", "entropy", "log_loss"],
+                  "max_depth" : np.arange(5, 100, 5),
+                  "max_features" : ["sqrt", "log2", None],
+                  "warm_start" : [True, False]
+                  }
+    cv = grid_searching(grid_target_model_list["RF"], param_grid, kf)
+
+    cv.fit(X_train_selected, y_train)
+
+    mlflow.log_params(cv['best_params'])
+
+    mlflow.log_metric("CV_best_score", cv["best_score"])
+
+    print("Random Forest 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+    print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+
+print("\n")
+print("대상 : KNN 모델")
+print("\n")
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [KNN-5Fold]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+
+    param_grid = {"n_neighbors" : np.arange(5, 100, 5),
+                  "weights" : ['uniform', 'distance'],
+                  "algorithm" : ['auto', 'ball_tree', 'kd_tree', 'brute'],
+                  "leaf_size" : np.arange(30, 300, 10),
+                  "p" : [1, 2],
+                  "metric" : ['minkowski'],
+                  }
+    cv = grid_searching(grid_target_model_list["KNN"], param_grid, kf)
+
+    cv.fit(X_train_selected, y_train)
+
+    mlflow.log_params(cv['best_params'])
+
+    mlflow.sklearn.log_model(grid_target_model_list["KNN"], "model", skops_trusted_types=[
+        'sklearn.metrics._dist_metrics.EuclideanDistance64', 
+        'sklearn.neighbors._kd_tree.KDTree'
+    ])
+
+    mlflow.log_metric("CV_best_score", cv["best_score"])
+
+    print("KNN 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+    print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+
+# print("\n")
+# print("대상 : XGB 모델")
+# print("\n")
+
+# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [XGB-5Fold]")
+# mlflow.autolog()
+
+# with mlflow.start_run() :
+
+#     param_grid = {"booster" : ['gbtree'],
+#                   "max_depth" : np.arange(1, 10),
+#                   "min_child_weight" : np.arange(1, 10),
+#                   "gamma": np.arange(1, 10),
+#                   "n_estimators" : np.arange(10, 200, 5)
+#                   }
+#     cv = grid_searching(grid_target_model_list["XGB"], param_grid, kf)
+
+#     cv.fit(X_train_selected, y_train)
+
+#     mlflow.log_params(cv['best_params'])
+
+#     mlflow.sklearn.log_model(grid_target_model_list["XGB"], "model", skops_trusted_types=[
+#         'xgboost.core.Booster', 
+#         'xgboost.sklearn.XGBClassifier'
+#     ])
+
+#     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+#     print("XGBoost 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+print("\n")
+print("하이퍼파라미터 튜닝 완료")
+print("\n")

@@ -10,4 +10,4 @@ COPY data/ .
 COPY src/ .
 COPY tests/ .
 
-ENTRYPOINT ["python", "test_pipeline.py"]
+ENTRYPOINT ["python", "inference.py"]

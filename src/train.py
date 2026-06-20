@@ -4,16 +4,40 @@ from preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
 # 앙상블로 특성 선택에 필요한 라이브러리
 from sklearn.feature_selection import SelectFromModel
 
+from xgboost import XGBClassifier
+# cuda 사용할 경우 아래 코드 사용
+# model = XGBClassifier(
+#     device='cuda',        # GPU 사용
+#     tree_method='hist',   # 2.0+ 에서는 hist + device 조합
+#     n_estimators=300,
+# )
+
 # 모델들
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.svm import SVC
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from xgboost import XGBClassifier
+
+
+# mlflow
+import mlflow
+import mlflow.sklearn
+
+# 추론 후 점수들
+# from inference import LR_predict, \
+#     SVM_acc_list, SVM_roc_acc_ovo_list, SVM_roc_acc_ovr_list, \
+#     RF_acc, RF_roc_auc_ovo, RF_roc_auc_ovr, \
+#     KNN_acc, KNN_roc_auc_ovo, KNN_roc_auc_ovr, \
+#     XGB_acc, XGB_roc_auc_ovo, XGB_roc_auc_ovr
+
+from inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
+
+# 교차 검증
+from sklearn.model_selection import KFold, GridSearchCV
 
 # 그 이외의 라이브러리
-import pandas as pd
+import numpy as np
 
 print("\n\n")
 print("[Train 단계 (train.py)]")
@@ -57,53 +81,306 @@ print("\n")
 # 모델 학습 단계
 # =====================================
 
-# Logistic Regression 학습
-LR_model = LogisticRegression(max_iter=300)
-LR_model.fit(X_train_selected, y_train)
+# 실험 이름 설정
 
-print("Logistic Regression 모델 학습 완료")
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [Logistic Regression]")
+mlflow.autolog()
 
-print("\n")
+# LR 실험 시작
+with mlflow.start_run() :
+    # Logistic Regression 학습
+    LR_model = LogisticRegression(max_iter=300, random_state=1)
+    LR_model.fit(X_train_selected, y_train)
+    print("Logistic Regression 모델 학습 완료")
+    print("\n")
 
-# SVM(Support Vector Machine) 학습
-SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
-SVM_fitted_list = []
+    mlflow.log_params({"max_iter" : 300, "random_state" : 1})
 
-for i in range(0, len(SVM_kernel)) :
-    # SVC의 probality 속성이 scikit-learn 1.11 버전부터 deprecated 됨에 따라
-    # CalibratedClassifierCV() 함수로 이를 대체함
+    mlflow.log_metric("Accuracy_Score", LR_predict(LR_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", LR_predict(LR_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", LR_predict(LR_model, X_test_selected, y_test)[2])
 
-    if (i == 'poly') :
-        SVM_model = CalibratedClassifierCV(SVC(kernel=SVM_kernel[i], C=5, degree=3, random_state=1), ensemble=False)
-    else :
-        SVM_model = CalibratedClassifierCV(SVC(kernel=SVM_kernel[i], C=5, random_state=1), ensemble=False)
-    
+    mlflow.sklearn.log_model(LR_model, "model")
+
+    print("Logistic Regression 모델 실험 완료\n")
+
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [SVM]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+    # SVM(Support Vector Machine) 학습
+    # SVM_kernel = ['linear', 'poly', 'rbf', 'sigmoid'] # precomputed 커널은 데이터가 정방행렬만 가능
+    # SVM_fitted_list = []
+
+    SVM_model = CalibratedClassifierCV(SVC(kernel='rbf', C=5, random_state=1), ensemble=False)
     SVM_model.fit(X_train_selected, y_train)
 
-    # 학습된 모델을 리스트화 해서 그대로 inference로 넘김
-    SVM_fitted_list.insert(i, SVM_model)
+    print("SVM(Support Vector Machine) 모델 학습 완료")
+    print("\n")
 
-print("SVM(Support Vector Machine) 모델 학습 완료")
+
+    mlflow.log_params({"kernel" : 'rbf',
+                        "C" : 5,
+                        "random_state" : 1})
+        
+    mlflow.sklearn.log_model(SVM_model, "model", skops_trusted_types=[
+        "sklearn.calibration._CalibratedClassifier",
+        "sklearn.calibration._SigmoidCalibration",
+    ])
+
+    mlflow.log_metric("Accuracy_Score", SVM_predict(SVM_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", SVM_predict(SVM_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", SVM_predict(SVM_model, X_test_selected, y_test)[2])
+
+    print("SVM(Support Vector Machine) 모델 실험 완료\n")
+
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [Random Forest]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+    # Random Forest 학습 (앙상블 방법에서 사용된 모델 가져옴)
+    RF_model = forest
+    RF_model.fit(X_train_selected, y_train)
+
+    print("Random Forest 모델 학습 완료")
+    print("\n")
+
+    mlflow.log_params({"n_estimators" : 100, "max_depth" : 5, "random_state" : 1})
+
+    mlflow.sklearn.log_model(RF_model, "model")
+
+    mlflow.log_metric("Accuracy_Score", RF_predict(RF_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", RF_predict(RF_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", RF_predict(RF_model, X_test_selected, y_test)[2])
+
+    print("Random Forest 모델 실험 완료\n")
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [KNN]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+    # KNN(K-Nearest Neighbors) 학습
+    KNN_model = KNeighborsClassifier(n_neighbors=10)
+    KNN_model.fit(X_train_selected, y_train)
+
+    print("KNN(K-Nearest Neighbors) 모델 학습 완료")
+    print("\n")
+
+    mlflow.log_param("n_neighbors", 10)
+
+    mlflow.sklearn.log_model(KNN_model, "model", skops_trusted_types=[
+        'sklearn.metrics._dist_metrics.EuclideanDistance64', 
+        'sklearn.neighbors._kd_tree.KDTree'
+    ])
+
+    mlflow.log_metric("Accuracy_Score", KNN_predict(KNN_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", KNN_predict(KNN_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", KNN_predict(KNN_model, X_test_selected, y_test)[2])
+
+    print("KNN(K-Nearest Neighbors) 모델 실험 완료\n")
+
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [XGBoost]")
+mlflow.autolog()
+
+with mlflow.start_run() :
+    # XGBoost(eXtra Gradient Boost) 학습 (설정은 Random Forest와 똑같이 하였음)
+    XGB_model = XGBClassifier(n_estimators=100, max_depth=5, random_state=1)
+    XGB_model.fit(X_train_selected, y_train)
+
+    print("XGBoost (eXtra Gradient Boost) 분류기 모델 학습 완료")
+    print("\n")
+
+    mlflow.log_params({"n_estimators" : 100, "max_depth" : 5, "random_state" : 1})
+    
+    mlflow.sklearn.log_model(XGB_model, "model", skops_trusted_types=[
+        'xgboost.core.Booster', 
+        'xgboost.sklearn.XGBClassifier'
+    ])
+
+    mlflow.log_metric("Accuracy_Score", XGB_predict(XGB_model, X_test_selected, y_test)[0])
+    mlflow.log_metric("ROC_AUC_OVO", XGB_predict(XGB_model, X_test_selected, y_test)[1])
+    mlflow.log_metric("ROC_AUC_OVR", XGB_predict(XGB_model, X_test_selected, y_test)[2])
+
+    print("XGBoost (eXtra Gradient Boost) 분류기 모델 실험 완료\n")
+
 
 print("\n")
-
-# Random Forest 학습 (앙상블 방법에서 사용된 모델 가져옴)
-RF_model = forest
-RF_model.fit(X_train_selected, y_train)
-
-print("Random Forest 모델 학습 완료")
+print("교차 검증 및 하이퍼파라미터 튜닝합니다.")
 print("\n")
 
-# KNN(K-Nearest Neighbors) 학습
-KNN_model = KNeighborsClassifier(n_neighbors=10)
-KNN_model.fit(X_train_selected, y_train)
+def grid_searching(grid_target_model, param_grid, kf) :
 
-print("KNN(K-Nearest Neighbors) 모델 학습 완료")
+    # CPU를 기준으로 돌아갑니다.
+    cv = GridSearchCV(grid_target_model, param_grid=param_grid, cv=kf, n_jobs=-1, verbose=2)
+
+    cv.fit(X_train_selected, y_train)
+
+    result = {"best_params" : cv.best_params_,
+              "best_score" : cv.best_score_}
+
+    return result
+
+# 교차 검증
+kf = KFold(n_splits=5, shuffle=True, random_state=1)
+grid_target_model_list = {"LR" : LogisticRegression(),
+                          "SVM" : SVC(),
+                          "RF" : RandomForestClassifier(),
+                          "KNN" : KNeighborsClassifier(),
+                          "XGB" : XGBClassifier()}
+
+# print('\n')
+# print("대상 : Logistic Regression 모델")
+# print('\n')
+
+# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [LR-5Fold]")
+# mlflow.autolog()
+
+# with mlflow.start_run() :
+
+#     param_grid = {"penalty" : ['l1', 'l2', 'elasticnet', None],
+#               "C" : np.arange(1, 60, 3),
+#               "l1_ratio" : np.arange(0.0001, 1, 10),
+#               "dual" : [True, False],
+#               "fit_intercept" : [True, False],
+#               "solver" : ['lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga'],
+#               "max_iter" : np.arange(100, 1000, 10)
+#               }
+
+#     cv = grid_searching(grid_target_model_list["LR"], param_grid, kf)
+
+#     mlflow.log_params(cv['best_params'])
+
+#     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+#     print("Logistic Regression 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+# print('\n')
+# print("대상 : SVM 모델")
+# print('\n')
+# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [SVM-5Fold]")
+# mlflow.autolog()
+
+# with mlflow.start_run() :
+
+#     param_grid = {"C" : np.arange(1, 60, 3),
+#                   "kernel" : ['linear', 'poly', 'rbf', 'sigmoid'],
+#                   "degree" : np.arange(1, 20, 2), # 어차피 poly가 아닌 다른 parameter들은 무시됨
+#                   "gamma" : ['scale', 'auto'],
+#                   "verbose" : [True, False],
+#                   "max_iter" : np.arange(1, 100, 2),
+#               }
+
+#     cv = grid_searching(grid_target_model_list["SVM"], param_grid, kf)
+
+#     mlflow.log_params(cv['best_params'])
+
+#     mlflow.sklearn.log_model(grid_target_model_list["SVM"], "model", skops_trusted_types=[
+#         "sklearn.calibration._CalibratedClassifier",
+#         "sklearn.calibration._SigmoidCalibration",
+#     ])
+
+#     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+#     print("SVM 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+print("\n")
+print("대상 : RF 모델")
 print("\n")
 
-# XGBoost(eXtra Gradient Boost) 학습 (설정은 Random Forest와 똑같이 하였음)
-XGB_model = XGBClassifier(n_estimators=100, max_depth=5, random_state=1)
-XGB_model.fit(X_train_selected, y_train)
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [RF-5Fold]")
+mlflow.autolog(log_models=False) # 이렇게 안하면 메모리가 죽음
 
-print("XGBoost (eXtra Gradient Boost) 분류기 모델 학습 완료")
+with mlflow.start_run() :
+
+    # 9 * 10 * 3 = 270
+    param_grid = {"n_estimators" : np.arange(100, 500, 50),
+                  "max_depth" : np.arange(5, 50, 5),
+                  "max_features" : ["sqrt", "log2", None],
+                  }
+    cv = grid_searching(grid_target_model_list["RF"], param_grid, kf)
+
+    mlflow.log_params(cv['best_params'])
+
+    mlflow.log_metric("CV_best_score", cv["best_score"])
+
+    rf_cv_best_params = cv['best_params']
+    rf_cv_best_score = cv["best_score"]
+
+    print("Random Forest 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+    print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+
+print("\n")
+print("대상 : KNN 모델")
+print("\n")
+
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [KNN-5Fold]")
+mlflow.autolog(log_models=False)
+
+with mlflow.start_run() :
+
+    # 10 * 27 * 2 = 540
+    param_grid = {"n_neighbors" : np.arange(5, 50, 5),
+                  "leaf_size" : np.arange(30, 300, 10),
+                  "p" : [1, 2],
+                  }
+    cv = grid_searching(grid_target_model_list["KNN"], param_grid, kf)
+
+    mlflow.log_params(cv['best_params'])
+
+    mlflow.sklearn.log_model(grid_target_model_list["KNN"], "model", skops_trusted_types=[
+        'sklearn.metrics._dist_metrics.EuclideanDistance64', 
+        'sklearn.neighbors._kd_tree.KDTree'
+    ])
+
+    knn_cv_best_params = cv['best_params']
+    knn_cv_best_score = cv["best_score"]
+
+    mlflow.log_metric("CV_best_score", cv["best_score"])
+
+    print("KNN 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+    print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+
+# print("\n")
+# print("대상 : XGB 모델")
+# print("\n")
+
+# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [XGB-5Fold]")
+# mlflow.autolog()
+
+# with mlflow.start_run() :
+
+#     param_grid = {"booster" : ['gbtree'],
+#                   "max_depth" : np.arange(1, 10),
+#                   "min_child_weight" : np.arange(1, 10),
+#                   "gamma": np.arange(1, 10),
+#                   "n_estimators" : np.arange(10, 200, 5)
+#                   }
+#     cv = grid_searching(grid_target_model_list["XGB"], param_grid, kf)
+
+#     cv.fit(X_train_selected, y_train)
+
+#     mlflow.log_params(cv['best_params'])
+
+#     mlflow.sklearn.log_model(grid_target_model_list["XGB"], "model", skops_trusted_types=[
+#         'xgboost.core.Booster', 
+#         'xgboost.sklearn.XGBClassifier'
+#     ])
+
+#     mlflow.log_metric("CV_best_score", cv["best_score"])
+
+#     print("XGBoost 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+
+print("\n")
+print("하이퍼파라미터 튜닝 완료")
+print("최종 결과 입니다. (소괄호 안 값은 점수입니다.))\n")
+print("Random Forest 모델 : ", rf_cv_best_params, " (", rf_cv_best_score,")\n")
+print("KNN 모델 : ", knn_cv_best_params, " (", knn_cv_best_score,")\n")
 print("\n")

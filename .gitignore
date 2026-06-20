@@ -5,3 +5,5 @@ mlruns
 mlruns/*
 
 mlflow.db
+
+data/*.csv

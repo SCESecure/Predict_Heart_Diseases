@@ -1,5 +1,11 @@
-# 전처리 했던 변수들
-from preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
+# 파일 불러오기
+try :
+    from preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
+    from inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
+
+except ImportError :
+    from src.preprocessing import X_train_scaled, y_train, X_test_scaled, y_test
+    from src.inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
 
 # 앙상블로 특성 선택에 필요한 라이브러리
 from sklearn.feature_selection import SelectFromModel
@@ -30,8 +36,6 @@ import mlflow.sklearn
 #     RF_acc, RF_roc_auc_ovo, RF_roc_auc_ovr, \
 #     KNN_acc, KNN_roc_auc_ovo, KNN_roc_auc_ovr, \
 #     XGB_acc, XGB_roc_auc_ovo, XGB_roc_auc_ovr
-
-from inference import LR_predict, SVM_predict, RF_predict, KNN_predict, XGB_predict
 
 # 교차 검증
 from sklearn.model_selection import KFold, GridSearchCV
@@ -384,3 +388,11 @@ print("최종 결과 입니다. (소괄호 안 값은 점수입니다.))\n")
 print("Random Forest 모델 : ", rf_cv_best_params, " (", rf_cv_best_score,")\n")
 print("KNN 모델 : ", knn_cv_best_params, " (", knn_cv_best_score,")\n")
 print("\n")
+
+final_RF = RandomForestClassifier(max_depth = int(rf_cv_best_params['max_depth']), 
+                                  max_features = rf_cv_best_params['max_features'], 
+                                  n_estimators = int(rf_cv_best_params['max_depth'])
+                                  ).fit(X_train_selected, y_train)
+final_KNN = KNeighborsClassifier(leaf_size = int(knn_cv_best_params['leaf_size']), 
+                                 n_neighbors = int(knn_cv_best_params['n_neighbors']), 
+                                 p = knn_cv_best_params['p']).fit(X_train_selected, y_train)

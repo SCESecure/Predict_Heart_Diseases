@@ -6,4 +6,4 @@ mlruns/*
 
 mlflow.db
 
-data/*.csv
+data/**/*.csv

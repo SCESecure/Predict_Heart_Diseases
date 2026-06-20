@@ -26,11 +26,22 @@ y = heart_disease.data.targets
 
 # feature_df = pd.read_table(X)
 
-X.to_csv('./data/heart_disease_feature.csv')
-y.to_csv('./data/heart_disease_target.csv')
+try :
+    X.to_csv('./data/heart_disease_feature.csv')
+    y.to_csv('./data/heart_disease_target.csv')
 
-feature_file_path = "./data/heart_disease_feature.csv"
-target_file_path = "./data/heart_disease_target.csv"
+    feature_file_path = "./data/heart_disease_feature.csv"
+    target_file_path = "./data/heart_disease_target.csv"
+except OSError or FileNotFoundError :
+    X.to_csv('./heart_disease_feature.csv')
+    y.to_csv('./heart_disease_target.csv')
+
+    feature_file_path = "./heart_disease_feature.csv"
+    target_file_path = "./heart_disease_target.csv"
+
+
+# feature_file_path = "./data/heart_disease_feature.csv"
+# target_file_path = "./data/heart_disease_target.csv"
 
 row_feature_data = pd.read_csv(feature_file_path)
 row_target_data = pd.read_csv(target_file_path)
@@ -88,6 +99,12 @@ print(X_test_scaled.head())
 
 print("\n")
 
-X_train_scaled.to_csv('./data/X_train_scaled_data.csv')
-X_test_scaled.to_csv('./data/X_test_scaled_data.csv')
+try :
+    X_train_scaled.to_csv('./data/X_train_scaled_data.csv')
+    X_test_scaled.to_csv('./data/X_test_scaled_data.csv')
+
+except OSError :
+    X_train_scaled.to_csv('./X_train_scaled_data.csv')
+    X_test_scaled.to_csv('./X_test_scaled_data.csv')
+
 print("X_train과 X_test 데이터가 csv파일로 정상적으로 내보내기 완료했습니다.")

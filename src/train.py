@@ -103,6 +103,10 @@ with mlflow.start_run() :
     mlflow.log_metric("Accuracy_Score", LR_predict(LR_model, X_test_selected, y_test)[0])
     mlflow.log_metric("ROC_AUC_OVO", LR_predict(LR_model, X_test_selected, y_test)[1])
     mlflow.log_metric("ROC_AUC_OVR", LR_predict(LR_model, X_test_selected, y_test)[2])
+    mlflow.log_metric("Precision", LR_predict(LR_model, X_test_selected, y_test)[3])
+    mlflow.log_metric("Recall", LR_predict(LR_model, X_test_selected, y_test)[4])
+    mlflow.log_metric("F1-Score", LR_predict(LR_model, X_test_selected, y_test)[5])
+    mlflow.log_metric("Balanced_Acc", LR_predict(LR_model, X_test_selected, y_test)[6])
 
     mlflow.sklearn.log_model(LR_model, "model")
 
@@ -123,7 +127,6 @@ with mlflow.start_run() :
     print("SVM(Support Vector Machine) 모델 학습 완료")
     print("\n")
 
-
     mlflow.log_params({"kernel" : 'rbf',
                         "C" : 5,
                         "random_state" : 1})
@@ -136,6 +139,10 @@ with mlflow.start_run() :
     mlflow.log_metric("Accuracy_Score", SVM_predict(SVM_model, X_test_selected, y_test)[0])
     mlflow.log_metric("ROC_AUC_OVO", SVM_predict(SVM_model, X_test_selected, y_test)[1])
     mlflow.log_metric("ROC_AUC_OVR", SVM_predict(SVM_model, X_test_selected, y_test)[2])
+    mlflow.log_metric("Precision", SVM_predict(SVM_model, X_test_selected, y_test)[3])
+    mlflow.log_metric("Recall", SVM_predict(SVM_model, X_test_selected, y_test)[4])
+    mlflow.log_metric("F1-Score", SVM_predict(SVM_model, X_test_selected, y_test)[5])
+    mlflow.log_metric("Balanced_Acc", SVM_predict(SVM_model, X_test_selected, y_test)[6])
 
     print("SVM(Support Vector Machine) 모델 실험 완료\n")
 
@@ -158,8 +165,13 @@ with mlflow.start_run() :
     mlflow.log_metric("Accuracy_Score", RF_predict(RF_model, X_test_selected, y_test)[0])
     mlflow.log_metric("ROC_AUC_OVO", RF_predict(RF_model, X_test_selected, y_test)[1])
     mlflow.log_metric("ROC_AUC_OVR", RF_predict(RF_model, X_test_selected, y_test)[2])
+    mlflow.log_metric("Precision", RF_predict(RF_model, X_test_selected, y_test)[3])
+    mlflow.log_metric("Recall", RF_predict(RF_model, X_test_selected, y_test)[4])
+    mlflow.log_metric("F1-Score", RF_predict(RF_model, X_test_selected, y_test)[5])
+    mlflow.log_metric("Balanced_Acc", RF_predict(RF_model, X_test_selected, y_test)[6])
 
     print("Random Forest 모델 실험 완료\n")
+
 
 mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [KNN]")
 mlflow.autolog()
@@ -182,6 +194,10 @@ with mlflow.start_run() :
     mlflow.log_metric("Accuracy_Score", KNN_predict(KNN_model, X_test_selected, y_test)[0])
     mlflow.log_metric("ROC_AUC_OVO", KNN_predict(KNN_model, X_test_selected, y_test)[1])
     mlflow.log_metric("ROC_AUC_OVR", KNN_predict(KNN_model, X_test_selected, y_test)[2])
+    mlflow.log_metric("Precision", KNN_predict(KNN_model, X_test_selected, y_test)[3])
+    mlflow.log_metric("Recall", KNN_predict(KNN_model, X_test_selected, y_test)[4])
+    mlflow.log_metric("F1-Score", KNN_predict(KNN_model, X_test_selected, y_test)[5])
+    mlflow.log_metric("Balanced_Acc", KNN_predict(KNN_model, X_test_selected, y_test)[6])
 
     print("KNN(K-Nearest Neighbors) 모델 실험 완료\n")
 
@@ -207,6 +223,10 @@ with mlflow.start_run() :
     mlflow.log_metric("Accuracy_Score", XGB_predict(XGB_model, X_test_selected, y_test)[0])
     mlflow.log_metric("ROC_AUC_OVO", XGB_predict(XGB_model, X_test_selected, y_test)[1])
     mlflow.log_metric("ROC_AUC_OVR", XGB_predict(XGB_model, X_test_selected, y_test)[2])
+    mlflow.log_metric("Precision", XGB_predict(XGB_model, X_test_selected, y_test)[3])
+    mlflow.log_metric("Recall", XGB_predict(XGB_model, X_test_selected, y_test)[4])
+    mlflow.log_metric("F1-Score", XGB_predict(XGB_model, X_test_selected, y_test)[5])
+    mlflow.log_metric("Balanced_Acc", XGB_predict(XGB_model, X_test_selected, y_test)[6])
 
     print("XGBoost (eXtra Gradient Boost) 분류기 모델 실험 완료\n")
 

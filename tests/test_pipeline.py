@@ -18,7 +18,7 @@ class TestModelInference(unittest.TestCase) :
         self.model = train.final_SVM
         self.X_test = preprocessing.X_test
 
-        print("사용될 모델 : KNN\n")
+        print("사용될 모델 : SVM\n")
         print("사용될 테스트 데이터 : X_test")
         print(self.X_test)
 

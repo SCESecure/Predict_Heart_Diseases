@@ -425,14 +425,14 @@ print("Random Forest 모델 : ", rf_cv_best_params, " (", rf_cv_best_score,")\n"
 print("KNN 모델 : ", knn_cv_best_params, " (", knn_cv_best_score,")\n")
 print("\n")
 
-final_SVM = SVC(shrinking=True, probability=False, tol=1e-3, cache_size=400, 
+final_SVM = CalibratedClassifierCV(SVC(shrinking=True, probability=False, tol=1e-3, cache_size=400, 
                 class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', 
                 break_ties=False, random_state=1, 
                 C=svm_cv_best_params['C'],
                 kernel=svm_cv_best_params['kernel'],
                 degree=svm_cv_best_params['degree'],
                 gamma=svm_cv_best_params['gamma'],
-                coef0=svm_cv_best_params['coef0']).fit(X_train, y_train)
+                coef0=svm_cv_best_params['coef0']), ensemble=False).fit(X_train, y_train)
 
 final_RF = RandomForestClassifier(max_depth = int(rf_cv_best_params['max_depth']), 
                                   max_features = rf_cv_best_params['max_features'], 

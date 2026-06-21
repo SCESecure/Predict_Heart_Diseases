@@ -8,3 +8,5 @@ mlflow.db
 data/**/*.csv
 
 cardiocare.log
+
+X_test-X_test_cpy.png

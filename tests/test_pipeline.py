@@ -15,7 +15,7 @@ class TestModelInference(unittest.TestCase) :
         print("Test 단계 (test_pipeline.py)")
         print("\n\n")
 
-        self.model = train.final_KNN
+        self.model = train.final_SVM
         self.X_test = preprocessing.X_test
 
         print("사용될 모델 : KNN\n")

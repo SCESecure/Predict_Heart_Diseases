@@ -1,10 +1,10 @@
 try :
     from preprocessing import X_test, y_test
-    from train import final_KNN
+    from train import final_SVM
 
 except ImportError :
     from src.preprocessing import X_test, y_test
-    from src.train import final_KNN
+    from src.train import final_SVM
 
 from scipy.stats import ks_2samp
 from sklearn.metrics import balanced_accuracy_score
@@ -34,7 +34,7 @@ for i in range(X_test.shape[0]) :
     print(X_test.iloc[i, :])
     print('\n')
     instance = X_test.iloc[i, :].values.reshape(1, -1)
-    prediction = final_KNN.predict(instance)
+    prediction = final_SVM.predict(instance)
 
     print("prediction")
     print(prediction)
@@ -103,8 +103,8 @@ print("\n")
 
 print("[balanced_accuracy]")
 
-X_test_pred = final_KNN.predict(X_test)
-X_test_cpy_pred = final_KNN.predict(X_test_cpy)
+X_test_pred = final_SVM.predict(X_test)
+X_test_cpy_pred = final_SVM.predict(X_test_cpy)
 
 X_test_bacc = balanced_accuracy_score(y_test, X_test_pred)
 X_test_cpy_bacc = balanced_accuracy_score(y_test, X_test_cpy_pred)

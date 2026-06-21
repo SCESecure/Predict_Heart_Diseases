@@ -250,7 +250,18 @@ def grid_searching(grid_target_model, param_grid, kf) :
 # 교차 검증
 kf = KFold(n_splits=5, shuffle=True, random_state=1)
 grid_target_model_list = {"LR" : LogisticRegression(),
-                          "SVM" : SVC(),
+                          "SVM" : SVC(coef0=0, 
+                                      shrinking=True, 
+                                      probability=False,
+                                      tol=1e-3,
+                                      cache_size=400,
+                                      class_weight=None,
+                                      verbose=False,
+                                      max_iter=-1,
+                                      decision_function_shape='ovr',
+                                      break_ties=False,
+                                      random_state=1
+                                      ),
                           "RF" : RandomForestClassifier(),
                           "KNN" : KNeighborsClassifier(),
                           "XGB" : XGBClassifier()}
@@ -282,35 +293,37 @@ grid_target_model_list = {"LR" : LogisticRegression(),
 #     print("Logistic Regression 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
 #     print("점수는 다음과 같습니다.\n", cv["best_score"])
 
-# print('\n')
-# print("대상 : SVM 모델")
-# print('\n')
-# mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [SVM-5Fold]")
-# mlflow.autolog()
+print('\n')
+print("대상 : SVM 모델")
+print('\n')
+mlflow.set_experiment("Heart Disease Prediction(CardioCare datasets used) [SVM-5Fold]")
+mlflow.autolog()
 
-# with mlflow.start_run() :
+with mlflow.start_run() :
 
-#     param_grid = {"C" : np.arange(1, 60, 3),
-#                   "kernel" : ['linear', 'poly', 'rbf', 'sigmoid'],
-#                   "degree" : np.arange(1, 20, 2), # 어차피 poly가 아닌 다른 parameter들은 무시됨
-#                   "gamma" : ['scale', 'auto'],
-#                   "verbose" : [True, False],
-#                   "max_iter" : np.arange(1, 100, 2),
-#               }
+    param_grid = {"C" : np.logspace(-1, 2, 10),
+                  "kernel" : ['linear', 'poly', 'rbf', 'sigmoid'],
+                  "degree" : [2, 3, 4], # 어차피 poly가 아닌 다른 parameter들은 무시됨
+                  "gamma" : ['scale', 'auto'],
+                  "coef0": [0.0, 1.0],
+              }
 
-#     cv = grid_searching(grid_target_model_list["SVM"], param_grid, kf)
+    cv = grid_searching(grid_target_model_list["SVM"], param_grid, kf)
 
-#     mlflow.log_params(cv['best_params'])
+    mlflow.log_params(cv['best_params'])
 
-#     mlflow.sklearn.log_model(grid_target_model_list["SVM"], "model", skops_trusted_types=[
-#         "sklearn.calibration._CalibratedClassifier",
-#         "sklearn.calibration._SigmoidCalibration",
-#     ])
+    mlflow.sklearn.log_model(grid_target_model_list["SVM"], "model", skops_trusted_types=[
+        "sklearn.calibration._CalibratedClassifier",
+        "sklearn.calibration._SigmoidCalibration",
+    ])
 
-#     mlflow.log_metric("CV_best_score", cv["best_score"])
+    mlflow.log_metric("CV_best_score", cv["best_score"])
 
-#     print("SVM 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
-#     print("점수는 다음과 같습니다.\n", cv["best_score"])
+    svm_cv_best_params = cv['best_params']
+    svm_cv_best_score = cv["best_score"]
+
+    print("SVM 모델의 최적의 하이퍼파라미터는 다음과 같습니다.\n", cv["best_params"])
+    print("점수는 다음과 같습니다.\n", cv["best_score"])
 
 print("\n")
 print("대상 : RF 모델")
@@ -407,9 +420,19 @@ with mlflow.start_run() :
 print("\n")
 print("하이퍼파라미터 튜닝 완료")
 print("최종 결과 입니다. (소괄호 안 값은 점수입니다.))\n")
+print("SVM 모델 : ", svm_cv_best_params, " (", svm_cv_best_score,")\n")
 print("Random Forest 모델 : ", rf_cv_best_params, " (", rf_cv_best_score,")\n")
 print("KNN 모델 : ", knn_cv_best_params, " (", knn_cv_best_score,")\n")
 print("\n")
+
+final_SVM = SVC(shrinking=True, probability=False, tol=1e-3, cache_size=400, 
+                class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', 
+                break_ties=False, random_state=1, 
+                C=svm_cv_best_params['C'],
+                kernel=svm_cv_best_params['kernel'],
+                degree=svm_cv_best_params['degree'],
+                gamma=svm_cv_best_params['gamma'],
+                coef0=svm_cv_best_params['coef0']).fit(X_train, y_train)
 
 final_RF = RandomForestClassifier(max_depth = int(rf_cv_best_params['max_depth']), 
                                   max_features = rf_cv_best_params['max_features'], 

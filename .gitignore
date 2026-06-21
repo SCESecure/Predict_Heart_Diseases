@@ -1,9 +1,10 @@
 .venv
 .venv/*
 
-mlruns
-mlruns/*
+mlruns/*/
 
 mlflow.db
 
 data/**/*.csv
+
+cardiocare.log

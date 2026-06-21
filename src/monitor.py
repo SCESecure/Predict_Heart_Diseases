@@ -123,7 +123,7 @@ x = np.arange(len(X_test))
 # plt.bar(idx + 0.25, X_test_cpy['chol'], width=width, color='green', label="X_test_cpy['chol']")
 
 plt.scatter(x, X_test['chol'], color='red', label="X_test['chol']")
-plt.scatter(x, X_test_cpy['chol'], color='green', label="X_test['chol']")
+plt.scatter(x, X_test_cpy['chol'], color='green', label="X_test_cpy['chol']")
 plt.legend()
 
 plt.xlabel('tester')

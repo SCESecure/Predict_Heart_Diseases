@@ -7,9 +7,12 @@ except ImportError :
     from src.train import final_KNN
 
 from scipy.stats import ks_2samp
+from sklearn.metrics import balanced_accuracy_score
 
 import logging
-import random
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
@@ -93,3 +96,41 @@ def KS_testing(sample1, sample2) :
 print("[X_test vs. X_test_cpy]")
 
 KS_testing(X_test, X_test_cpy)
+
+print("\n")
+print("두 데이터 셋을 비교합니다.")
+print("\n")
+
+print("[balanced_accuracy]")
+
+X_test_pred = final_KNN.predict(X_test)
+X_test_cpy_pred = final_KNN.predict(X_test_cpy)
+
+X_test_bacc = balanced_accuracy_score(y_test, X_test_pred)
+X_test_cpy_bacc = balanced_accuracy_score(y_test, X_test_cpy_pred)
+
+print("X_test : ", X_test_bacc)
+print("X_test_cpy : ", X_test_cpy_bacc)
+
+print("[가시화]")
+
+idx = X_test['chol'].index
+width = 0.25
+
+x = np.arange(len(X_test))
+
+# plt.bar(idx, X_test['chol'], width=width, color='red', label="X_test['chol']")
+# plt.bar(idx + 0.25, X_test_cpy['chol'], width=width, color='green', label="X_test_cpy['chol']")
+
+plt.scatter(x, X_test['chol'], color='red', label="X_test['chol']")
+plt.scatter(x, X_test_cpy['chol'], color='green', label="X_test['chol']")
+plt.legend()
+
+plt.xlabel('tester')
+plt.ylabel('chol')
+
+
+plt.savefig("./X_test-X_test_cpy.png")
+
+print("가시화 완료")
+

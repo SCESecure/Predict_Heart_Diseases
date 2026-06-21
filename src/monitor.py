@@ -29,6 +29,9 @@ print(X_test)
 print("X_test.shape[0] : ", X_test.shape[0])
 print("\n")
 
+correct_cnt = 0
+total_cnt = 0
+
 for i in range(X_test.shape[0]) :
     print(f"X_test.iloc[{i}, :] : ")
     print(X_test.iloc[i, :])
@@ -41,8 +44,15 @@ for i in range(X_test.shape[0]) :
     print("\n")
 
 
+    if (prediction[0] == y_test.iloc[i]) :
+        correct_cnt += 1
+    
+    total_cnt += 1
+
     print(f'Inst.{i} -> Model: 1.0, X_test.shape : {X_test.shape}, Pred: {prediction[0]}, Real: {y_test.iloc[i]}')
     logging.info(f'Inst.{i} -> Model: 1.0, X_test.shape : {X_test.shape}, Pred: {prediction[0]}, Real: {y_test.iloc[i]}')
+
+print(f"예측 성공 : {correct_cnt} / {total_cnt} ( {correct_cnt / total_cnt * 100} % )")
 
 print("\n")
 print("X_test 복사본(이하 X_test_cpy)에서 특성 하나를 shift")

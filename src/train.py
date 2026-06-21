@@ -330,6 +330,8 @@ with mlflow.start_run() :
 
     mlflow.log_params(cv['best_params'])
 
+    mlflow.sklearn.log_model(grid_target_model_list["RF"], "model")
+
     mlflow.log_metric("CV_best_score", cv["best_score"])
 
     rf_cv_best_params = cv['best_params']
